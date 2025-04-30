@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ipo_premium_client',
-    version='1.0.4',
+    version='1.0.5',
     author='Dhaval Mehta',
     description='Unofficial ipopremium.in client',
     long_description='Unofficial ipo premium client',
