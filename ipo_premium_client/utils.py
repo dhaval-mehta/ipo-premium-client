@@ -1,16 +1,14 @@
 import re
 from typing import Dict
 
+import requests
 from lxml import html
-from requests_cache import CachedSession
 
 from ipo_premium_client.exceptions import ElementNotFound
 
-session = CachedSession()
-
 
 def parse_table_from_url(url: str, xpath: str) -> Dict[str, Dict[str, str]]:
-    response = session.get(url=url)
+    response = requests.get(url=url)
     response.raise_for_status()
     table = html.fromstring(response.text).xpath(xpath)
     if len(table) != 1:
@@ -48,7 +46,7 @@ def parse_table(html_table) -> Dict[str, Dict[str, str]]:
 
 
 def parse_row_based_table_from_url(url: str, xpath: str) -> dict[str, str]:
-    response = session.get(url=url)
+    response = requests.get(url=url)
     response.raise_for_status()
     table = html.fromstring(response.text).xpath(xpath)
     if not len(table):
