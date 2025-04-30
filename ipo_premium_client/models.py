@@ -42,7 +42,7 @@ class Subscription:
     def allotment_probability(self):
         subscription_percentage = self.application_wise_subscription_percentage
         if subscription_percentage <= 1:
-            return 'confirmed'
+            return 'Confirmed'
 
         return f'1 out of {subscription_percentage}'
 

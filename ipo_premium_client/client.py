@@ -79,6 +79,7 @@ class IpoPremiumClient:
             if 'mainboard' not in name.lower():
                 continue
 
+            name = name[:name.rindex('(') - 1]
             issue_size = self.get_issue_size(data['url'])
             ipo = build_ipo(
                 url=data['url'],
