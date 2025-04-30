@@ -1,8 +1,8 @@
 from typing import Dict, List, Union
 
-from mapper import build_ipo
-from models import IPOSubscriptionCategory, IPO, IPOType, Subscription
-from utils import parse_table_from_url
+from ipo_premium_client.mapper import build_ipo
+from ipo_premium_client.models import IPOSubscriptionCategory, IPO, IPOType, Subscription
+from ipo_premium_client.utils import parse_table_from_url
 
 
 class IpoPremiumClient:
@@ -45,6 +45,9 @@ class IpoPremiumClient:
         data = parse_table_from_url(self.BASE_URL, self.IPO_TABLE_XPATH)
         ipos = []
         for name, data in data.items():
+            if 'mainboard' not in name.lower():
+                continue
+
             ipos.append(build_ipo(
                 url=data['url'],
                 name=name,

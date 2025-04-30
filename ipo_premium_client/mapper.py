@@ -1,8 +1,8 @@
 import datetime
 from typing import Optional
 
-from models import IPO, NCD, BuyBack
-from utils import is_blank, get_number_or_input
+from ipo_premium_client.models import IPO
+from ipo_premium_client.utils import is_blank, get_number_or_input
 
 
 def parse_date(date, date_format):
