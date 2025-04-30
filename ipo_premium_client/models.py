@@ -19,16 +19,20 @@ class IPO:
 
         return ''
 
+
 class Subscription:
-    def __init__(self, shared_offered: int, shared_bid_for: int, bid_amount: float) -> None:
+    def __init__(self, shared_offered: int, shares_applied: int, application_reserved: int,
+                 application_applied: int, bid_amount: float) -> None:
         super().__init__()
-        self.shared_offered = shared_offered
-        self.shared_bid_for = shared_bid_for
+        self.shares_offered = shared_offered
+        self.shares_applied = shares_applied
+        self.application_reserved = application_reserved
+        self.application_applied = application_applied
         self.bid_amount = bid_amount
 
     @property
     def subscription_percentage(self):
-        return round(self.shared_bid_for / self.shared_offered, 2)
+        return round(self.shares_applied / self.shares_offered, 2)
 
 
 class IPOType:

@@ -1,10 +1,22 @@
 import re
-from typing import Dict
+from typing import Dict, List
 
 import requests
 from lxml import html
 
 from ipo_premium_client.exceptions import ElementNotFound
+
+
+def parse_tables_from_url(url: str, xpaths: List[str]) -> List[Dict[str, Dict[str, str]]]:
+    response = requests.get(url=url)
+    response.raise_for_status()
+    tables = []
+    for xpath in xpaths:
+        table = html.fromstring(response.text).xpath(xpath)
+        if len(table) != 1:
+            raise Exception('Failed to parse table')
+        tables.append(parse_table(table[0]))
+    return tables
 
 
 def parse_table_from_url(url: str, xpath: str) -> Dict[str, Dict[str, str]]:
@@ -18,7 +30,7 @@ def parse_table_from_url(url: str, xpath: str) -> Dict[str, Dict[str, str]]:
 
 def parse_table(html_table) -> Dict[str, Dict[str, str]]:
     table = {}
-    headers = [header.text_content() for header in html_table.findall('thead')[0].findall('tr')[0].findall('th')][1:]
+    headers = [header.text_content() for header in html_table.findall('thead')[0].findall('tr')[-1].findall('th')][1:]
 
     html_rows = html_table.findall('tbody')[0].findall('tr')
     for html_row in html_rows:
@@ -37,6 +49,8 @@ def parse_table(html_table) -> Dict[str, Dict[str, str]]:
                 break
 
         for index, td in enumerate(children[1:]):
+            if len(headers) <= index:
+                continue
             k = remove_non_ascii(headers[index].strip())
             row[k] = remove_non_ascii(td.text_content().strip())
 
