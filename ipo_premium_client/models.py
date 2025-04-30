@@ -34,6 +34,18 @@ class Subscription:
     def subscription_percentage(self):
         return round(self.shares_applied / self.shares_offered, 2)
 
+    @property
+    def application_wise_subscription_percentage(self):
+        return round(self.application_applied / self.application_reserved, 2)
+
+    @property
+    def allotment_probability(self):
+        subscription_percentage = self.application_wise_subscription_percentage
+        if subscription_percentage <= 1:
+            return 'confirmed'
+
+        return f'1 out of {subscription_percentage}'
+
 
 class IPOType:
     EQUITY = 'equity'
