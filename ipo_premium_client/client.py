@@ -95,7 +95,7 @@ class IpoPremiumClient:
                 issue_size=issue_size,
             )
 
-            if ipo.close_date < datetime.date.today():
+            if ipo.listing_date < datetime.date.today() - datetime.timedelta(days=30):
                 break
             ipos.append(ipo)
         return ipos
