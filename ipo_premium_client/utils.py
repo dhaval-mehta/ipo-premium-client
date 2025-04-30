@@ -1,13 +1,16 @@
 import re
 from typing import Dict
 
-import requests
 from lxml import html
+from requests_cache import CachedSession
 
+from ipo_premium_client.exceptions import ElementNotFound
+
+session = CachedSession()
 
 
 def parse_table_from_url(url: str, xpath: str) -> Dict[str, Dict[str, str]]:
-    response = requests.get(url=url)
+    response = session.get(url=url)
     response.raise_for_status()
     table = html.fromstring(response.text).xpath(xpath)
     if len(table) != 1:
@@ -44,21 +47,27 @@ def parse_table(html_table) -> Dict[str, Dict[str, str]]:
     return table
 
 
-def parse_row_based_table_from_url(url: str, xpath: str) -> Dict[str, Dict[str, str]]:
-    response = requests.get(url=url)
+def parse_row_based_table_from_url(url: str, xpath: str) -> dict[str, str]:
+    response = session.get(url=url)
     response.raise_for_status()
     table = html.fromstring(response.text).xpath(xpath)
-    if len(table) != 1:
-        print('Failed to parse table')
-    return parse_row_based_table_from_url(table[0], xpath)
+    if not len(table):
+        raise ElementNotFound('Failed to parse table')
+    return parse_row_based_table(table[0])
 
 
 def parse_row_based_table(html_table) -> Dict[str, str]:
     table = {}
-    rows = html_table.findall('tbody')[0].findall('tr')
+    table_body = html_table.findall('tbody')
+    if len(table_body) != 1:
+        raise ElementNotFound('Failed to parse table')
+    rows = table_body[0].findall('tr')
     for row in rows:
-        key, value = [td.text_content().strip() for td in row.findall('td')]
-        table[key] = value
+        try:
+            key, value = [td.text_content().strip() for td in row.findall('td')]
+            table[key] = value
+        except ValueError as e:
+            print('Failed to parse row', e)
     return table
 
 
@@ -73,10 +82,14 @@ def remove_non_ascii(text):
     return re.sub(r'[^\x00-\x7F]', "", text).strip()
 
 
-
-
 def get_number_or_input(x):
     try:
         return float(x)
     except ValueError:
         return x
+
+
+def parse_float(text):
+    keep_list = '0123456789.'
+    num_list = ''.join([x for x in text if x in keep_list])
+    return float(num_list)

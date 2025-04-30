@@ -1,13 +1,16 @@
+import datetime
 from typing import Dict, List, Union
 
+from ipo_premium_client.exceptions import ElementNotFound
 from ipo_premium_client.mapper import build_ipo
 from ipo_premium_client.models import IPOSubscriptionCategory, IPO, IPOType, Subscription
-from ipo_premium_client.utils import parse_table_from_url
+from ipo_premium_client.utils import parse_table_from_url, parse_row_based_table_from_url, parse_float
 
 
 class IpoPremiumClient:
     BASE_URL = 'https://ipopremium.in/'
     IPO_TABLE_XPATH = '//*[@id="table"]'
+    IPO_DETAILS_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/table[1]'
     IPO_TABLE_DATE_FORMAT = '%b %d, %Y'
 
     live_subscription_category_mapping = {
@@ -48,7 +51,8 @@ class IpoPremiumClient:
             if 'mainboard' not in name.lower():
                 continue
 
-            ipos.append(build_ipo(
+            issue_size = self.get_issue_size(data['url'])
+            ipo = build_ipo(
                 url=data['url'],
                 name=name,
                 open_date=data['Open'],
@@ -59,7 +63,12 @@ class IpoPremiumClient:
                 gmp=data['Premium'],
                 allotment_date=data['Allotment Date'],
                 listing_date=data['Listing Date'],
-            ))
+                issue_size=issue_size,
+            )
+
+            if ipo.close_date < datetime.date.today():
+                break
+            ipos.append(ipo)
         return ipos
 
     def get_sme_ipos(self) -> List[IPO]:
@@ -77,3 +86,13 @@ class IpoPremiumClient:
                 date_format=self.MAIN_BOARD_IPO_DATE_FORMAT,
             ))
         return ipos
+
+    def get_issue_size(self, url) -> str:
+        keys = ['Issue Size']
+        data = parse_row_based_table_from_url(url, self.IPO_DETAILS_XPATH)
+        for key in keys:
+            if key in data:
+                issue_size_info = data[key]
+                return parse_float(issue_size_info.split()[-2])
+        return ''
+
