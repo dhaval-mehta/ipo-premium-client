@@ -38,7 +38,7 @@ def build_ipo(url: str, name: str, open_date: str, close_date: str, issue_prices
     allotment_date = parse_date(allotment_date, date_format)
     listing_date = parse_date(listing_date, date_format)
 
-    issue_prices = issue_prices.split(" ")
+    issue_prices = issue_prices.split("-")
     if len(issue_prices) == 3:
         issue_price = int(float(issue_prices[2]))
     elif len(issue_prices) == 1 and not is_blank(issue_prices[0]):

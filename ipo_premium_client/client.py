@@ -2,6 +2,10 @@ import datetime
 from collections import defaultdict
 from typing import Dict, List, Union
 
+import requests
+from lxml import html
+
+from ipo_premium_client.exceptions import ElementNotFound
 from ipo_premium_client.mapper import build_ipo
 from ipo_premium_client.models import IPOSubscriptionCategory, IPO, IPOType, Subscription
 from ipo_premium_client.utils import parse_table_from_url, parse_tables_from_url, parse_row_based_table_from_url, \
@@ -9,9 +13,8 @@ from ipo_premium_client.utils import parse_table_from_url, parse_tables_from_url
 
 
 class IpoPremiumClient:
-    BASE_URL = 'https://ipopremium.in/'
+    MAINBOARD_IPO_PATH = 'https://ipopremium.in/ipo?draw=9&columns[0][data]=name&columns[0][name]=&columns[0][searchable]=true&columns[0][orderable]=false&columns[0][search][value]=&columns[0][search][regex]=false&columns[1][data]=premium&columns[1][name]=&columns[1][searchable]=false&columns[1][orderable]=false&columns[1][search][value]=&columns[1][search][regex]=false&columns[2][data]=open&columns[2][name]=&columns[2][searchable]=true&columns[2][orderable]=false&columns[2][search][value]=&columns[2][search][regex]=false&columns[3][data]=close&columns[3][name]=&columns[3][searchable]=true&columns[3][orderable]=false&columns[3][search][value]=&columns[3][search][regex]=false&columns[4][data]=price&columns[4][name]=&columns[4][searchable]=false&columns[4][orderable]=false&columns[4][search][value]=&columns[4][search][regex]=false&columns[5][data]=lot_size&columns[5][name]=&columns[5][searchable]=true&columns[5][orderable]=false&columns[5][search][value]=&columns[5][search][regex]=false&columns[6][data]=allotment_date&columns[6][name]=&columns[6][searchable]=false&columns[6][orderable]=false&columns[6][search][value]=&columns[6][search][regex]=false&columns[7][data]=listing_date&columns[7][name]=&columns[7][searchable]=false&columns[7][orderable]=false&columns[7][search][value]=&columns[7][search][regex]=false&columns[8][data]=action&columns[8][name]=&columns[8][searchable]=false&columns[8][orderable]=false&columns[8][search][value]=&columns[8][search][regex]=false&start=0&length=25&search[value]=&search[regex]=false&all=false&eq=true&sme=false&all_ipos=true&upcoming_ipos=false&open_ipos=false&closed_ipos=false'
     IPO_DETAILS_URL = 'https://ipopremium.in/view/ipo/{ipo_id}'
-    IPO_TABLE_XPATH = '//*[@id="table"]'
     IPO_DETAILS_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/table[1]'
     SHARES_WISE_BREAKUP_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[1]/div[2]/div/table[1]'
     APPLICATION_WISE_BREAKUP_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[1]/div[2]/div/table[2]'
@@ -73,25 +76,25 @@ class IpoPremiumClient:
         return subscription_data
 
     def get_mainboard_ipos(self) -> List[IPO]:
-        data = parse_table_from_url(self.BASE_URL, self.IPO_TABLE_XPATH)
+        response = requests.get(self.MAINBOARD_IPO_PATH)
+        response.raise_for_status()
         ipos = []
-        for name, data in data.items():
-            if 'mainboard' not in name.lower():
-                continue
-
-            name = name[:name.rindex('(') - 1]
-            issue_size = self.get_issue_size(data['url'])
+        for data in response.json()['data']:
+            name = html.fromstring(data['name']).text_content()
+            name = name[:name.index('(') - 1]
+            url = html.fromstring(data['name']).get('href')
+            issue_size = self.get_issue_size(url)
             ipo = build_ipo(
-                url=data['url'],
+                url=url,
                 name=name,
-                open_date=data['Open'],
-                close_date=data['Close'],
-                issue_prices=data['Price'],
+                open_date=data['open'],
+                close_date=data['close'],
+                issue_prices=data['price'],
                 ipo_type=IPOType.EQUITY,
                 date_format=self.IPO_TABLE_DATE_FORMAT,
-                gmp=data['Premium'],
-                allotment_date=data['Allotment Date'],
-                listing_date=data['Listing Date'],
+                gmp=data['premium'],
+                allotment_date=data['allotment_date'],
+                listing_date=data['listing_date'],
                 issue_size=issue_size,
             )
 
@@ -118,7 +121,11 @@ class IpoPremiumClient:
 
     def get_issue_size(self, url) -> str:
         keys = ['Issue Size']
-        data = parse_row_based_table_from_url(url, self.IPO_DETAILS_XPATH)
+        try:
+            data = parse_row_based_table_from_url(url, self.IPO_DETAILS_XPATH)
+        except ElementNotFound:
+            return ''
+
         for key in keys:
             if key in data:
                 issue_size_info = data[key]
