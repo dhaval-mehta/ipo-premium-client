@@ -25,7 +25,7 @@ def parse_date(date, date_format):
         raise Exception('failed to parse start date')
 
 
-def build_ipo(url: str, name: str, open_date: str, close_date: str, issue_prices: str,
+def build_ipo(url: str, name: str, open_date: str, close_date: str, issue_price: int,
               ipo_type: str, date_format: str, issue_size: Optional[str] = 0,  gmp: Optional[str] = None,
               allotment_date: Optional[str] = None, listing_date: Optional[str] = None) -> IPO:
     try:
@@ -37,14 +37,6 @@ def build_ipo(url: str, name: str, open_date: str, close_date: str, issue_prices
     close_date = parse_date(close_date, date_format)
     allotment_date = parse_date(allotment_date, date_format)
     listing_date = parse_date(listing_date, date_format)
-
-    issue_prices = issue_prices.split("-")
-    if len(issue_prices) == 3:
-        issue_price = int(float(issue_prices[2]))
-    elif len(issue_prices) == 1 and not is_blank(issue_prices[0]):
-        issue_price = int(float(issue_prices[0]))
-    else:
-        issue_price = ''
 
     if not is_blank(gmp):
         gmp = float(gmp.split(' ')[0])

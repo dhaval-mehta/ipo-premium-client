@@ -13,9 +13,9 @@ from ipo_premium_client.utils import parse_table_from_url, parse_tables_from_url
 
 
 class IpoPremiumClient:
-    MAINBOARD_IPO_PATH = 'https://ipopremium.in/ipo?draw=9&columns[0][data]=name&columns[0][name]=&columns[0][searchable]=true&columns[0][orderable]=false&columns[0][search][value]=&columns[0][search][regex]=false&columns[1][data]=premium&columns[1][name]=&columns[1][searchable]=false&columns[1][orderable]=false&columns[1][search][value]=&columns[1][search][regex]=false&columns[2][data]=open&columns[2][name]=&columns[2][searchable]=true&columns[2][orderable]=false&columns[2][search][value]=&columns[2][search][regex]=false&columns[3][data]=close&columns[3][name]=&columns[3][searchable]=true&columns[3][orderable]=false&columns[3][search][value]=&columns[3][search][regex]=false&columns[4][data]=price&columns[4][name]=&columns[4][searchable]=false&columns[4][orderable]=false&columns[4][search][value]=&columns[4][search][regex]=false&columns[5][data]=lot_size&columns[5][name]=&columns[5][searchable]=true&columns[5][orderable]=false&columns[5][search][value]=&columns[5][search][regex]=false&columns[6][data]=allotment_date&columns[6][name]=&columns[6][searchable]=false&columns[6][orderable]=false&columns[6][search][value]=&columns[6][search][regex]=false&columns[7][data]=listing_date&columns[7][name]=&columns[7][searchable]=false&columns[7][orderable]=false&columns[7][search][value]=&columns[7][search][regex]=false&columns[8][data]=action&columns[8][name]=&columns[8][searchable]=false&columns[8][orderable]=false&columns[8][search][value]=&columns[8][search][regex]=false&start=0&length=25&search[value]=&search[regex]=false&all=false&eq=true&sme=false&all_ipos=true&upcoming_ipos=false&open_ipos=false&closed_ipos=false'
+    MAINBOARD_IPO_PATH = 'https://ipopremium.in/ipo?all_ipos=true&eq=true'
     IPO_DETAILS_URL = 'https://ipopremium.in/view/ipo/{ipo_id}'
-    IPO_DETAILS_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/table[1]'
+    IPO_DETAILS_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[2]/div[2]/div[2]/div[1]/table'
     SHARES_WISE_BREAKUP_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[1]/div[2]/div/table[1]'
     APPLICATION_WISE_BREAKUP_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[1]/div[2]/div/table[2]'
     AMOUNT_WISE_BREAKUP_XPATH = '/html/body/div/div[1]/div[2]/div/div/div[2]/div[1]/div[2]/div/table[3]'
@@ -89,7 +89,7 @@ class IpoPremiumClient:
                 name=name,
                 open_date=data['open'],
                 close_date=data['close'],
-                issue_prices=data['price'],
+                issue_price=data['max_price'],
                 ipo_type=IPOType.EQUITY,
                 date_format=self.IPO_TABLE_DATE_FORMAT,
                 gmp=data['premium'],
